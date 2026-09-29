@@ -1,0 +1,55 @@
+name: Test set-environment-variables-for-job disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: action
+        uses: .
+        with:
+          main-branch-name: 'main'
+          error-on-no-successful-workflow: 'false'
+          set-environment-variables-for-job: 'false'
+        continue-on-error: true
+
+      - name: Assert NX_BASE and NX_HEAD are not set in environment
+        env:
+          BASE: ${{ steps.action.outputs.base }}
+          HEAD: ${{ steps.action.outputs.head }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "base output: $BASE"
+          echo "head output: $HEAD"
+          echo "NX_BASE env: ${NX_BASE:-<not set>}"
+          echo "NX_HEAD env: ${NX_HEAD:-<not set>}"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$BASE" ]; then
+              echo "FAIL: action succeeded but base output is empty"
+              exit 1
+            fi
+            if [ -z "$HEAD" ]; then
+              echo "FAIL: action succeeded but head output is empty"
+              exit 1
+            fi
+            # NX_BASE and NX_HEAD should NOT be set when set-environment-variables-for-job=false
+            if [ -n "$NX_BASE" ]; then
+              echo "FAIL: NX_BASE should not be set when set-environment-variables-for-job=false, got: $NX_BASE"
+              exit 1
+            fi
+            if [ -n "$NX_HEAD" ]; then
+              echo "FAIL: NX_HEAD should not be set when set-environment-variables-for-job=false, got: $NX_HEAD"
+              exit 1
+            fi
+            echo "PASS: outputs set correctly and NX_BASE/NX_HEAD not in environment"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo not resolvable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

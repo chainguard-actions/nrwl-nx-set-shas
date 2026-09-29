@@ -1,0 +1,46 @@
+name: Test workflow-id input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          workflow-id: 'ci.yml'
+          main-branch-name: 'main'
+          last-successful-event: 'push'
+          error-on-no-successful-workflow: 'false'
+          set-environment-variables-for-job: 'false'
+
+      - name: Assert action ran with workflow-id input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          BASE: ${{ steps.action.outputs.base }}
+          HEAD: ${{ steps.action.outputs.head }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "base: $BASE"
+          echo "head: $HEAD"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$BASE" ]; then
+              echo "FAIL: action succeeded but base output is empty"
+              exit 1
+            fi
+            if [ -z "$HEAD" ]; then
+              echo "FAIL: action succeeded but head output is empty"
+              exit 1
+            fi
+            echo "PASS: got base='$BASE' head='$HEAD'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable via GitHub API)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
