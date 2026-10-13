@@ -1,0 +1,3 @@
+bunx --no-install lint-staged --allow-empty
+
+bun tools/pre-commit.ts

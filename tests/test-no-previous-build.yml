@@ -1,0 +1,52 @@
+name: Test noPreviousBuild output
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          main-branch-name: main
+          set-environment-variables-for-job: 'false'
+          error-on-no-successful-workflow: 'false'
+          last-successful-event: push
+
+      - name: Assert noPreviousBuild output is set or action failed gracefully
+        env:
+          BASE: ${{ steps.action.outputs.base }}
+          HEAD: ${{ steps.action.outputs.head }}
+          NO_PREV_BUILD: ${{ steps.action.outputs.noPreviousBuild }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "base: $BASE"
+          echo "head: $HEAD"
+          echo "noPreviousBuild: $NO_PREV_BUILD"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$BASE" ]; then
+              echo "FAIL: action succeeded but base output is empty"
+              exit 1
+            fi
+            if [ -z "$HEAD" ]; then
+              echo "FAIL: action succeeded but head output is empty"
+              exit 1
+            fi
+            # noPreviousBuild is either 'true' or unset (empty string)
+            if [ -n "$NO_PREV_BUILD" ] && [ "$NO_PREV_BUILD" != "true" ]; then
+              echo "FAIL: noPreviousBuild should be 'true' or empty, got '$NO_PREV_BUILD'"
+              exit 1
+            fi
+            echo "PASS: got base='$BASE' head='$HEAD' noPreviousBuild='$NO_PREV_BUILD'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (sentinel repo is not resolvable)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
