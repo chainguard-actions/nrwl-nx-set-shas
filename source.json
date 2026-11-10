@@ -4,8 +4,13 @@
   "version": "v5.1.0",
   "commit_sha": "e602fada7ad5987b0f7b1905e7a99ea1c661514c",
   "url": "https://github.com/nrwl/nx-set-shas",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/nrwl/nx-set-shas/v5.1.0/sha256-97a143fb5204fedb3efbcd59d328c2bc5dd47f40f4b44a2f7a35715d34b7613e.tar.gz",
+    "sha256": "97a143fb5204fedb3efbcd59d328c2bc5dd47f40f4b44a2f7a35715d34b7613e",
+    "size_bytes": 199155
+  }
 }
